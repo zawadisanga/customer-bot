@@ -21,13 +21,11 @@
         .hero { text-align: center; padding: 40px 0; }
         .hero h1 { font-size: 48px; margin-bottom: 20px; background: linear-gradient(135deg, #fff, #aaffaa); -webkit-background-clip: text; background-clip: text; color: transparent; }
         
-        /* Voice Section */
-        .voice-section {
+        .voice-section, .screen-section, .routine-section, .chat-section {
             background: rgba(255,255,255,0.05);
             border-radius: 24px;
             padding: 30px;
             margin: 20px 0;
-            text-align: center;
         }
         .mic-btn {
             width: 100px;
@@ -46,13 +44,6 @@
         .mic-btn:hover { transform: scale(1.1); }
         .mic-btn.listening { animation: pulse 1s infinite; background: linear-gradient(135deg, #ff4444, #cc0000); }
         
-        /* Screen Share Section */
-        .screen-section {
-            background: rgba(255,255,255,0.05);
-            border-radius: 24px;
-            padding: 30px;
-            margin: 20px 0;
-        }
         .screen-preview {
             width: 100%;
             height: 300px;
@@ -64,28 +55,14 @@
             justify-content: center;
             overflow: hidden;
         }
-        .screen-preview video, .screen-preview img { max-width: 100%; max-height: 100%; }
+        .screen-preview video { max-width: 100%; max-height: 100%; }
         
-        /* Daily Routine Section */
-        .routine-section {
-            background: rgba(255,255,255,0.05);
-            border-radius: 24px;
-            padding: 30px;
-            margin: 20px 0;
-        }
         .routine-input { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
         .routine-input input { flex: 1; padding: 12px; border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: white; }
         .routine-input button { padding: 12px 20px; border-radius: 10px; border: none; background: linear-gradient(135deg, #667eea, #764ba2); color: white; cursor: pointer; }
         .routine-list { max-height: 200px; overflow-y: auto; }
         .routine-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; }
         
-        /* Chat Section */
-        .chat-section {
-            background: rgba(255,255,255,0.05);
-            border-radius: 24px;
-            padding: 30px;
-            margin: 20px 0;
-        }
         .chat-messages {
             height: 300px;
             overflow-y: auto;
@@ -180,13 +157,11 @@
         let isProcessing = false;
         let dailyRoutines = JSON.parse(localStorage.getItem('dailyRoutines') || '[]');
         
-        // Display time
         document.getElementById('time').innerText = new Date().toLocaleTimeString();
         setInterval(() => {
             document.getElementById('time').innerText = new Date().toLocaleTimeString();
         }, 1000);
         
-        // Display routines
         function displayRoutines() {
             const routineList = document.getElementById('routineList');
             if (dailyRoutines.length > 0) {
@@ -222,7 +197,6 @@
             displayRoutines();
         }
         
-        // Speech Recognition
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
@@ -233,15 +207,14 @@
             recognition.onresult = async (event) => {
                 const text = event.results[0][0].transcript;
                 document.getElementById('voiceResult').innerHTML = `<strong>You said:</strong> "${text}"<br><div class="loader"></div> Processing...`;
-                document.getElementById('voiceStatus').innerHTML = '🎤 Processing your request...';
+                document.getElementById('voiceStatus').innerHTML = '🎤 Processing...';
                 
                 let response = getAIResponse(text);
                 
-                document.getElementById('voiceResult').innerHTML = `<strong>You said:</strong> "${text}"<br><strong>AI Response:</strong> ${response}`;
+                document.getElementById('voiceResult').innerHTML = `<strong>You said:</strong> "${text}"<br><strong>AI:</strong> ${response}`;
                 document.getElementById('voiceStatus').innerHTML = '🎤 Click microphone and speak...';
                 addMessage(response, 'bot');
                 
-                // Speak response
                 const utterance = new SpeechSynthesisUtterance(response);
                 utterance.lang = 'en-US';
                 window.speechSynthesis.speak(utterance);
@@ -256,7 +229,7 @@
                 document.getElementById('micBtn').classList.remove('listening');
             };
         } else {
-            document.getElementById('voiceStatus').innerHTML = '⚠️ Speech recognition not supported in this browser';
+            document.getElementById('voiceStatus').innerHTML = '⚠️ Speech recognition not supported';
         }
         
         function startVoiceRecognition() {
@@ -265,72 +238,48 @@
                 document.getElementById('micBtn').classList.add('listening');
                 document.getElementById('voiceStatus').innerHTML = '🎤 Listening... Speak now!';
             } else {
-                alert('Speech recognition not supported. Please use Chrome, Edge, or Safari.');
+                alert('Speech recognition not supported. Please use Chrome.');
             }
         }
         
         function getAIResponse(message) {
             const msg = message.toLowerCase();
-            if (msg.includes('price') || msg.includes('bei') || msg.includes('gharama')) {
-                return "💰 ZASS Pricing: Free: $0/mo (500 requests), Pro: $49/mo (5,000 requests), Business: $99/mo (15,000 requests), Enterprise: $299/mo (unlimited). Which plan interests you?";
-            }
-            if (msg.includes('payment') || msg.includes('malipo')) {
-                return "💳 Payment Instructions: Bank: NMB Bank Tanzania, Account: 5161480052318274, Account Name: ZASS Enterprise Solutions, SWIFT: NMBLTZTZ. After payment, email citytechuk@gmail.com with payment reference.";
-            }
-            if (msg.includes('api key') || msg.includes('funguo')) {
-                return "🔑 To get an API key: 1. Register at https://zass.website/register, 2. Complete payment for paid plans, 3. Your API key will appear in dashboard. Free plan users get API key immediately!";
-            }
-            if (msg.includes('hello') || msg.includes('hi') || msg.includes('jambo')) {
-                return "Hello! 👋 Welcome to ZASS AI Assistant. How can I help you today? You can ask about pricing, payments, or API keys!";
-            }
-            if (msg.includes('time') || msg.includes('saa')) {
-                return `🕐 Current time is ${new Date().toLocaleTimeString()}`;
-            }
-            if (msg.includes('date') || msg.includes('tarehe')) {
-                return `📅 Today is ${new Date().toDateString()}`;
-            }
-            if (msg.includes('help') || msg.includes('msaada')) {
-                return "🤝 I can help you with: Pricing plans, Payment methods, API keys, Technical support, Account management. What do you need?";
-            }
-            return "Thank you for your message. I'm ZASS AI Assistant. I can help with pricing, payments, API keys, and technical support. What specific information do you need?";
+            if (msg.includes('price') || msg.includes('bei')) return "💰 Pricing: Free $0/mo, Pro $49/mo, Business $99/mo, Enterprise $299/mo. Which plan?";
+            if (msg.includes('payment')) return "💳 NMB Bank: 5161480052318274, ZASS Enterprise Solutions. Email citytechuk@gmail.com after payment.";
+            if (msg.includes('api key')) return "🔑 Get API key at /register. Free plan users get key immediately.";
+            if (msg.includes('hello') || msg.includes('hi')) return "Hello! 👋 Welcome to ZASS AI Assistant!";
+            if (msg.includes('time')) return `🕐 ${new Date().toLocaleTimeString()}`;
+            if (msg.includes('help')) return "🤝 I can help with: Pricing, Payments, API keys, Support.";
+            return "I'm ZASS AI Assistant. Ask me about pricing, payments, or API keys!";
         }
         
-        // Screen Share
         async function startScreenShare() {
             try {
                 mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
                 const video = document.createElement('video');
                 video.srcObject = mediaStream;
                 video.autoplay = true;
-                const preview = document.getElementById('screenPreview');
-                preview.innerHTML = '';
-                preview.appendChild(video);
-                document.getElementById('screenAnalysis').innerHTML = '📸 Screen sharing active. Click "Capture & Analyze" to analyze current screen.';
+                document.getElementById('screenPreview').innerHTML = '';
+                document.getElementById('screenPreview').appendChild(video);
+                document.getElementById('screenAnalysis').innerHTML = '📸 Screen sharing active. Click "Capture & Analyze".';
             } catch (err) {
-                alert('Error sharing screen: ' + err.message);
+                alert('Error: ' + err.message);
             }
         }
         
         async function captureScreen() {
-            if (!mediaStream) {
-                alert('Please start screen sharing first');
-                return;
-            }
+            if (!mediaStream) { alert('Start screen share first'); return; }
             const video = document.querySelector('#screenPreview video');
             if (!video) return;
-            
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth || 800;
             canvas.height = video.videoHeight || 600;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            document.getElementById('screenAnalysis').innerHTML = '<div class="loader"></div> Analyzing screen...';
-            
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            document.getElementById('screenAnalysis').innerHTML = '<div class="loader"></div> Analyzing...';
             setTimeout(() => {
-                document.getElementById('screenAnalysis').innerHTML = '<strong>📊 Screen Analysis:</strong><br>I can see your screen. This appears to be a desktop or application window. For detailed analysis, please describe what you want me to look for.';
+                document.getElementById('screenAnalysis').innerHTML = '<strong>📊 Analysis:</strong> Screen captured successfully. For detailed analysis, describe what you want me to look for.';
                 addMessage('Screen captured and analyzed.', 'bot');
-            }, 1500);
+            }, 1000);
         }
         
         function stopScreenShare() {
@@ -342,24 +291,20 @@
             }
         }
         
-        // Chat functions
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
             if (!message || isProcessing) return;
-            
             addMessage(message, 'user');
             input.value = '';
             isProcessing = true;
-            
             const loadingDiv = addLoadingIndicator();
-            
             setTimeout(() => {
                 const response = getAIResponse(message);
                 loadingDiv.remove();
                 addMessage(response, 'bot');
                 isProcessing = false;
-            }, 500);
+            }, 300);
         }
         
         function addMessage(text, sender) {
