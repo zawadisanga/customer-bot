@@ -21,11 +21,13 @@
         .hero { text-align: center; padding: 40px 0; }
         .hero h1 { font-size: 48px; margin-bottom: 20px; background: linear-gradient(135deg, #fff, #aaffaa); -webkit-background-clip: text; background-clip: text; color: transparent; }
         
-        .voice-section, .screen-section, .routine-section, .chat-section {
+        /* Voice Section */
+        .voice-section {
             background: rgba(255,255,255,0.05);
             border-radius: 24px;
             padding: 30px;
             margin: 20px 0;
+            text-align: center;
         }
         .mic-btn {
             width: 100px;
@@ -44,6 +46,13 @@
         .mic-btn:hover { transform: scale(1.1); }
         .mic-btn.listening { animation: pulse 1s infinite; background: linear-gradient(135deg, #ff4444, #cc0000); }
         
+        /* Screen Share Section */
+        .screen-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 24px;
+            padding: 30px;
+            margin: 20px 0;
+        }
         .screen-preview {
             width: 100%;
             height: 300px;
@@ -55,12 +64,28 @@
             justify-content: center;
             overflow: hidden;
         }
+        .screen-preview video, .screen-preview img { max-width: 100%; max-height: 100%; }
+        
+        /* Daily Routine Section */
+        .routine-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 24px;
+            padding: 30px;
+            margin: 20px 0;
+        }
         .routine-input { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
         .routine-input input { flex: 1; padding: 12px; border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: white; }
         .routine-input button { padding: 12px 20px; border-radius: 10px; border: none; background: linear-gradient(135deg, #667eea, #764ba2); color: white; cursor: pointer; }
         .routine-list { max-height: 200px; overflow-y: auto; }
         .routine-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; }
         
+        /* Chat Section */
+        .chat-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 24px;
+            padding: 30px;
+            margin: 20px 0;
+        }
         .chat-messages {
             height: 300px;
             overflow-y: auto;
@@ -145,7 +170,7 @@
         
         <footer>
             <p>🎤 ZASS AI Agent | Voice + Screen Share + Daily Routine | 24/7 Online</p>
-            <p>📧 citytechuk@gmail.com | 📞 +25576323348</p>
+            <p>📧 citytechuk@gmail.com | 📞 +25576323348 | 💰 NMB: 5161480052318274</p>
         </footer>
     </div>
 
@@ -210,7 +235,6 @@
                 document.getElementById('voiceResult').innerHTML = `<strong>You said:</strong> "${text}"<br><div class="loader"></div> Processing...`;
                 document.getElementById('voiceStatus').innerHTML = '🎤 Processing your request...';
                 
-                // Smart AI responses
                 let response = getAIResponse(text);
                 
                 document.getElementById('voiceResult').innerHTML = `<strong>You said:</strong> "${text}"<br><strong>AI Response:</strong> ${response}`;
@@ -256,9 +280,6 @@
             if (msg.includes('api key') || msg.includes('funguo')) {
                 return "🔑 To get an API key: 1. Register at https://zass.website/register, 2. Complete payment for paid plans, 3. Your API key will appear in dashboard. Free plan users get API key immediately!";
             }
-            if (msg.includes('help') || msg.includes('msaada')) {
-                return "🤝 I can help you with: Pricing plans, Payment methods, API keys, Technical support, Account management. What do you need?";
-            }
             if (msg.includes('hello') || msg.includes('hi') || msg.includes('jambo')) {
                 return "Hello! 👋 Welcome to ZASS AI Assistant. How can I help you today? You can ask about pricing, payments, or API keys!";
             }
@@ -267,6 +288,9 @@
             }
             if (msg.includes('date') || msg.includes('tarehe')) {
                 return `📅 Today is ${new Date().toDateString()}`;
+            }
+            if (msg.includes('help') || msg.includes('msaada')) {
+                return "🤝 I can help you with: Pricing plans, Payment methods, API keys, Technical support, Account management. What do you need?";
             }
             return "Thank you for your message. I'm ZASS AI Assistant. I can help with pricing, payments, API keys, and technical support. What specific information do you need?";
         }
@@ -304,7 +328,7 @@
             document.getElementById('screenAnalysis').innerHTML = '<div class="loader"></div> Analyzing screen...';
             
             setTimeout(() => {
-                document.getElementById('screenAnalysis').innerHTML = '<strong>📊 Screen Analysis:</strong><br>I can see your screen. This appears to be a desktop or application window. The content shows typical interface elements. For detailed analysis, please describe what you want me to look for.';
+                document.getElementById('screenAnalysis').innerHTML = '<strong>📊 Screen Analysis:</strong><br>I can see your screen. This appears to be a desktop or application window. For detailed analysis, please describe what you want me to look for.';
                 addMessage('Screen captured and analyzed.', 'bot');
             }, 1500);
         }
