@@ -1,88 +1,205 @@
-// server.js - ZASS AI AGENT (Fixed for Heroku)
+// server.js - ZASS AI AGENT with Voice, Screen Share, Daily Routine
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const { exec } = require('child_process');
+const multer = require('multer');
+const schedule = require('node-schedule');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ==================== MIDDLEWARE ====================
-app.use(cors());
-app.use(express.json());
-app.use(express.static('.'));
-
-// ==================== AI CONFIGURATION ====================
+// ==================== CONFIGURATION ====================
 const GEMINI_API_KEY = 'AIzaSyAgzX8szyUGq2TxCoUgAJx7U-z4FSgiLP8';
 const CONTACT_EMAIL = 'citytechuk@gmail.com';
 const CONTACT_PHONE = '+25576323348';
 
-// ==================== API ENDPOINTS ====================
+// ==================== MIDDLEWARE ====================
+app.use(cors());
+app.use(express.json({ limit: '100mb' }));
+app.use(express.static('.'));
+const upload = multer({ dest: 'uploads/', limits: { fileSize: 50 * 1024 * 1024 } });
 
-// AI Chat Endpoint
-app.post('/api/chat', async (req, res) => {
-    const { message } = req.body;
-    if (!message) return res.status(400).json({ error: 'Message required' });
-    
+// ==================== DIRECTORY SETUP ====================
+['uploads', 'screenshots', 'daily_tasks', 'logs'].forEach(dir => {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
+
+// ==================== DAILY ROUTINES STORAGE ====================
+let dailyRoutines = [];
+let scheduledJobs = [];
+
+// ==================== AI FUNCTIONS ====================
+async function callGemini(prompt, imageData = null) {
     try {
+        let body;
+        if (imageData) {
+            body = {
+                contents: [{
+                    parts: [
+                        { text: prompt },
+                        { inline_data: { mime_type: "image/png", data: imageData } }
+                    ]
+                }]
+            };
+        } else {
+            body = {
+                contents: [{
+                    parts: [{ text: prompt }]
+                }]
+            };
+        }
+        
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: `You are ZASS AI Assistant, a helpful customer support bot for an enterprise browser API platform. Be friendly, professional, and concise. Respond to: ${message}` }]
-                }]
-            })
+            body: JSON.stringify(body)
         });
         const data = await response.json();
-        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || getSmartReply(message);
-        res.json({ success: true, response: reply });
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || "I understand. How can I help you?";
     } catch (error) {
         console.error('AI Error:', error);
-        res.json({ success: true, response: getSmartReply(message) });
+        return "I'm having trouble connecting. Please try again.";
+    }
+}
+
+// ==================== COMMAND EXECUTION ====================
+async function executeCommand(command) {
+    return new Promise((resolve) => {
+        exec(command, (error, stdout, stderr) => {
+            resolve({ success: !error, output: stdout || stderr, error: error?.message });
+        });
+    });
+}
+
+// ==================== DAILY ROUTINES ====================
+function setupDailyRoutines() {
+    // Morning routine - 8:00 AM
+    schedule.scheduleJob('0 8 * * *', async () => {
+        console.log('🌅 Morning routine starting...');
+        const result = await callGemini("Give me a motivational quote and today's summary for ZASS Enterprise.");
+        fs.appendFileSync('logs/daily.log', `[${new Date()}] MORNING: ${result}\n`);
+    });
+    
+    // Midday check - 12:00 PM
+    schedule.scheduleJob('0 12 * * *', async () => {
+        console.log('☀️ Midday check...');
+        const result = await callGemini("Provide a midday productivity tip for the team.");
+        fs.appendFileSync('logs/daily.log', `[${new Date()}] MIDDAY: ${result}\n`);
+    });
+    
+    // Evening report - 5:00 PM
+    schedule.scheduleJob('0 17 * * *', async () => {
+        console.log('🌙 Evening report...');
+        const result = await callGemini("Generate an end-of-day summary report for ZASS Enterprise.");
+        fs.appendFileSync('logs/daily.log', `[${new Date()}] EVENING: ${result}\n`);
+    });
+    
+    console.log('✅ Daily routines scheduled');
+}
+
+// ==================== API ENDPOINTS ====================
+
+// Voice chat endpoint
+app.post('/api/voice-chat', async (req, res) => {
+    const { text, image } = req.body;
+    if (!text) return res.status(400).json({ error: 'Text required' });
+    
+    const response = await callGemini(text, image);
+    res.json({ success: true, response });
+});
+
+// Screen share analysis
+app.post('/api/screen-share', upload.single('screenshot'), async (req, res) => {
+    const { question } = req.body;
+    if (!req.file) return res.status(400).json({ error: 'Screenshot required' });
+    
+    const imageBuffer = req.file.buffer || fs.readFileSync(req.file.path);
+    const base64Image = imageBuffer.toString('base64');
+    
+    const prompt = question || "Analyze this screen and tell me what you see. Describe everything important.";
+    const response = await callGemini(prompt, base64Image);
+    
+    fs.unlinkSync(req.file.path);
+    res.json({ success: true, response });
+});
+
+// Daily routine management
+app.post('/api/daily-routine', async (req, res) => {
+    const { task, time, action } = req.body;
+    
+    if (action === 'add') {
+        dailyRoutines.push({ task, time, created: Date.now() });
+        
+        // Schedule the task
+        const [hour, minute] = time.split(':');
+        const job = schedule.scheduleJob(`${minute} ${hour} * * *`, async () => {
+            console.log(`📋 Executing daily task: ${task}`);
+            const result = await callGemini(`Execute this task: ${task}`);
+            fs.appendFileSync('logs/tasks.log', `[${new Date()}] TASK: ${task}\nRESULT: ${result}\n\n`);
+        });
+        scheduledJobs.push(job);
+        
+        res.json({ success: true, message: `Task scheduled for ${time}`, tasks: dailyRoutines });
+    } else {
+        res.json({ success: true, tasks: dailyRoutines });
     }
 });
 
-function getSmartReply(message) {
-    const msg = message.toLowerCase();
-    if (msg.includes('price') || msg.includes('bei')) {
-        return "💰 *ZASS Pricing:*\n\n• Free: $0/mo (500 requests)\n• Pro: $49/mo (5,000 requests)\n• Business: $99/mo (15,000 requests)\n• Enterprise: $299/mo (unlimited)\n\nWhich plan interests you?";
+// Execute any command
+app.post('/api/execute', async (req, res) => {
+    const { command } = req.body;
+    if (!command) return res.status(400).json({ error: 'Command required' });
+    
+    const result = await executeCommand(command);
+    res.json(result);
+});
+
+// Deploy to Heroku
+app.post('/api/deploy', async (req, res) => {
+    const { repoUrl, appName } = req.body;
+    if (!repoUrl) return res.status(400).json({ error: 'Repository URL required' });
+    
+    try {
+        await executeCommand(`git clone ${repoUrl} temp-deploy`);
+        await executeCommand(`cd temp-deploy && heroku create ${appName || 'zass-app-' + Date.now()} --region eu`);
+        await executeCommand(`cd temp-deploy && git push heroku main`);
+        await executeCommand(`rm -rf temp-deploy`);
+        res.json({ success: true, message: 'Deployed successfully' });
+    } catch (error) {
+        res.json({ success: false, error: error.message });
     }
-    if (msg.includes('payment') || msg.includes('malipo')) {
-        return `💳 *Payment Instructions:*\n\nBank: NMB Bank Tanzania\nAccount: 5161480052318274\nAccount Name: ZASS Enterprise Solutions\nSWIFT: NMBLTZTZ\n\nAfter payment, email ${CONTACT_EMAIL} with payment reference.`;
-    }
-    if (msg.includes('api key')) {
-        return "🔑 To get an API key:\n1. Register an account\n2. Complete payment (for paid plans)\n3. Your API key will appear in dashboard\n\nFree plan users get API key immediately!";
-    }
-    if (msg.includes('help')) {
-        return "🤝 I can help you with:\n• Pricing plans\n• Payment methods\n• API keys\n• Technical support\n• Account management\n\nWhat do you need?";
-    }
-    return "Hello! I'm ZASS AI Assistant. How can I help you today? Ask me about pricing, payments, or API keys!";
-}
+});
 
 // Health check
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '2.0.0' });
+    res.json({ status: 'ok', timestamp: new Date().toISOString(), routines: dailyRoutines.length });
 });
 
-// ==================== FRONTEND ====================
+// ==================== FRONTEND (Voice + Screen Share + Daily Routine) ====================
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // ==================== START SERVER ====================
+setupDailyRoutines();
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
-║   🤖 ZASS AI AGENT - DEPLOYED SUCCESSFULLY                          ║
-║   ===============================================                    ║
+║   🎤 ZASS AI AGENT - VOICE + SCREEN SHARE + DAILY ROUTINE           ║
+║   ============================================================       ║
 ║                                                                      ║
-║   ✅ Status: ONLINE                                                  ║
-║   ✅ Port: ${PORT}                                                    ║
-║   ✅ AI Model: Gemini 2.0 Flash                                      ║
+║   ✅ Voice Chat: Active                                              ║
+║   ✅ Screen Share: Active                                            ║
+║   ✅ Daily Routines: Active (8AM, 12PM, 5PM)                        ║
+║   ✅ Gemini AI: Active                                               ║
 ║                                                                      ║
 ║   📱 URL: https://your-app.herokuapp.com                             ║
-║   💬 Chat with AI Agent on the dashboard!                           ║
+║   🎤 Click microphone to speak with AI                               ║
+║   📸 Share screen to get AI analysis                                 ║
+║   ⏰ Set daily routines for automatic tasks                          ║
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
     `);
