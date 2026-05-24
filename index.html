@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>ZASS AI Agent - Voice Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZASS AI - Smart Assistant</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -12,7 +12,7 @@
             color: white;
             min-height: 100vh;
         }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
         nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; flex-wrap: wrap; gap: 20px; }
         .logo { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #fff, #aaffaa); -webkit-background-clip: text; background-clip: text; color: transparent; }
         .status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00ff00; animation: pulse 2s infinite; }
@@ -20,51 +20,16 @@
         
         .hero { text-align: center; padding: 40px 0; }
         .hero h1 { font-size: 48px; margin-bottom: 20px; background: linear-gradient(135deg, #fff, #aaffaa); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .hero p { font-size: 18px; color: #ddd; }
         
-        .voice-section, .screen-section, .routine-section, .chat-section {
+        .chat-section {
             background: rgba(255,255,255,0.05);
             border-radius: 24px;
             padding: 30px;
             margin: 20px 0;
         }
-        .mic-btn {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: none;
-            cursor: pointer;
-            margin: 20px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            transition: transform 0.3s;
-        }
-        .mic-btn:hover { transform: scale(1.1); }
-        .mic-btn.listening { animation: pulse 1s infinite; background: linear-gradient(135deg, #ff4444, #cc0000); }
-        
-        .screen-preview {
-            width: 100%;
-            height: 300px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 16px;
-            margin: 20px 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-        .screen-preview video { max-width: 100%; max-height: 100%; }
-        
-        .routine-input { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-        .routine-input input { flex: 1; padding: 12px; border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: white; }
-        .routine-input button { padding: 12px 20px; border-radius: 10px; border: none; background: linear-gradient(135deg, #667eea, #764ba2); color: white; cursor: pointer; }
-        .routine-list { max-height: 200px; overflow-y: auto; }
-        .routine-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; }
-        
         .chat-messages {
-            height: 300px;
+            height: 400px;
             overflow-y: auto;
             padding: 20px;
             background: rgba(0,0,0,0.3);
@@ -80,6 +45,21 @@
         .chat-input input { flex: 1; padding: 15px; border-radius: 50px; border: none; background: rgba(255,255,255,0.1); color: white; font-size: 16px; }
         .chat-input button { padding: 15px 30px; border-radius: 50px; border: none; background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-weight: bold; cursor: pointer; }
         
+        .voice-section { text-align: center; margin-bottom: 20px; }
+        .mic-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            cursor: pointer;
+            font-size: 40px;
+            transition: transform 0.3s;
+            margin: 0 auto;
+        }
+        .mic-btn:hover { transform: scale(1.1); }
+        .mic-btn.listening { animation: pulse 1s infinite; background: #ff4444; }
+        
         footer { text-align: center; padding: 40px 0; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 60px; }
         .loader { width: 20px; height: 20px; border: 2px solid white; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -89,55 +69,24 @@
 <body>
     <div class="container">
         <nav>
-            <div class="logo">🎤 ZASS AI Agent</div>
-            <div><span class="status"></span> Online | <span id="time"></span></div>
+            <div class="logo">🧠 ZASS AI Agent</div>
+            <div><span class="status"></span> Active</div>
         </nav>
         
         <div class="hero">
-            <h1>Your Voice AI Assistant</h1>
-            <p>Talk to me, share your screen, or set daily routines - I'm here 24/7!</p>
+            <h1>ZASS AI Assistant</h1>
+            <p>I can answer anything about pricing, payments, API keys, and technical support!</p>
         </div>
         
-        <!-- Voice Section -->
         <div class="voice-section">
-            <h3>🎙️ Voice Command</h3>
             <button class="mic-btn" id="micBtn" onclick="startVoiceRecognition()">🎤</button>
-            <p id="voiceStatus">Click microphone and speak...</p>
-            <div id="voiceResult" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 16px;"></div>
+            <p id="voiceStatus" style="margin-top: 10px; font-size: 12px; color: #aaa;">Click microphone and speak</p>
         </div>
         
-        <!-- Screen Share Section -->
-        <div class="screen-section">
-            <h3>📸 Screen Share & Analysis</h3>
-            <div class="screen-preview" id="screenPreview">
-                <p>No screen shared yet</p>
-            </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button onclick="startScreenShare()" style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 12px 20px; border: none; border-radius: 10px; color: white; cursor: pointer;">🖥️ Share Screen</button>
-                <button onclick="captureScreen()" style="background: linear-gradient(135deg, #4a9c3f, #2d5a2c); padding: 12px 20px; border: none; border-radius: 10px; color: white; cursor: pointer;">📷 Capture & Analyze</button>
-                <button onclick="stopScreenShare()" style="background: #ff4444; padding: 12px 20px; border: none; border-radius: 10px; color: white; cursor: pointer;">⏹️ Stop</button>
-            </div>
-            <div id="screenAnalysis" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 16px;"></div>
-        </div>
-        
-        <!-- Daily Routine Section -->
-        <div class="routine-section">
-            <h3>⏰ Daily Routines</h3>
-            <div class="routine-input">
-                <input type="text" id="taskInput" placeholder="Task (e.g., 'Check website status', 'Send report')">
-                <input type="time" id="timeInput" value="09:00">
-                <button onclick="addDailyRoutine()">➕ Add Routine</button>
-            </div>
-            <div class="routine-list" id="routineList">
-                <p>No routines set. Add one above!</p>
-            </div>
-        </div>
-        
-        <!-- Chat Section -->
         <div class="chat-section">
-            <h3>💬 Text Chat</h3>
             <div class="chat-messages" id="chatMessages">
-                <div class="message bot-message"><div class="bubble">👋 Hello! I'm ZASS AI Assistant. You can talk to me, share your screen, or set daily routines. What would you like to do today?</div></div>
+                <div class="message bot-message"><div class="bubble">👋 Hello! I'm ZASS AI Assistant. Ask me anything about pricing, payments, API keys, or technical support!</div></div>
+                <div class="message bot-message"><div class="bubble">💡 Try asking: "What is ZASS?", "How much does Pro cost?", or "How to get API key?"</div></div>
             </div>
             <div class="chat-input">
                 <input type="text" id="chatInput" placeholder="Type your question..." onkeypress="if(event.key==='Enter') sendMessage()">
@@ -146,57 +95,113 @@
         </div>
         
         <footer>
-            <p>🎤 ZASS AI Agent | Voice + Screen Share + Daily Routine | 24/7 Online</p>
+            <p>🧠 ZASS AI Assistant | Powered by Smart AI | 24/7 Online</p>
             <p>📧 citytechuk@gmail.com | 📞 +25576323348 | 💰 NMB: 5161480052318274</p>
         </footer>
     </div>
 
     <script>
-        let mediaStream = null;
         let recognition = null;
-        let isProcessing = false;
-        let dailyRoutines = JSON.parse(localStorage.getItem('dailyRoutines') || '[]');
         
-        document.getElementById('time').innerText = new Date().toLocaleTimeString();
-        setInterval(() => {
-            document.getElementById('time').innerText = new Date().toLocaleTimeString();
-        }, 1000);
-        
-        function displayRoutines() {
-            const routineList = document.getElementById('routineList');
-            if (dailyRoutines.length > 0) {
-                routineList.innerHTML = dailyRoutines.map((task, index) => `
-                    <div class="routine-item">
-                        <span>📋 ${task.task}</span>
-                        <span>⏰ ${task.time}</span>
-                        <button onclick="removeRoutine(${index})" style="background:#ff4444; border:none; border-radius:5px; padding:5px 10px; color:white; cursor:pointer;">❌</button>
-                    </div>
-                `).join('');
-            } else {
-                routineList.innerHTML = '<p>No routines set. Add one above!</p>';
+        // ==================== SMART AI RESPONSES ====================
+        function getSmartResponse(message) {
+            const msg = message.toLowerCase().trim();
+            
+            // About ZASS
+            if (msg.includes('zass') && (msg.includes('nini') || msg.includes('what') || msg.includes('is'))) {
+                return "🚀 **ZASS (Zero-logs Advanced Security System)** is an enterprise-grade browser isolation platform that protects your privacy with anti-fingerprinting technology. We provide screenshot and PDF APIs for developers worldwide.";
             }
-        }
-        
-        function addDailyRoutine() {
-            const task = document.getElementById('taskInput').value;
-            const time = document.getElementById('timeInput').value;
-            if (!task || !time) {
-                alert('Please enter task and time');
-                return;
+            
+            // About zass.website
+            if (msg.includes('zass.website') || (msg.includes('website') && msg.includes('zass'))) {
+                return "🌐 **zass.website** is our official platform where you can:\n• Get API keys\n• Capture screenshots\n• Generate PDFs\n• Access enterprise security features\n\nVisit: https://zass.website";
             }
-            dailyRoutines.push({ task, time });
-            localStorage.setItem('dailyRoutines', JSON.stringify(dailyRoutines));
-            displayRoutines();
-            document.getElementById('taskInput').value = '';
-            addMessage(`✅ Daily routine added: "${task}" at ${time}`, 'bot');
+            
+            // Pricing
+            if (msg.includes('price') || msg.includes('bei') || msg.includes('gharama') || msg.includes('cost') || msg.includes('plan')) {
+                return "💰 **ZASS Pricing Plans:**\n\n• **Free:** $0/mo - 500 requests\n• **Pro:** $49/mo - 5,000 requests\n• **Business:** $99/mo - 15,000 requests\n• **Enterprise:** $299/mo - Unlimited requests\n\nWhich plan interests you?";
+            }
+            
+            // Payment
+            if (msg.includes('payment') || msg.includes('malipo') || msg.includes('lipa') || msg.includes('nmb')) {
+                return "💳 **Payment Instructions:**\n\n🏦 Bank: NMB Bank Tanzania\n📋 Account Name: ZASS Enterprise Solutions\n🔢 Account Number: **5161480052318274**\n🌍 SWIFT: NMBLTZTZ\n\n📧 After payment, email citytechuk@gmail.com with payment reference for instant API key activation!";
+            }
+            
+            // API Key
+            if (msg.includes('api key') || msg.includes('funguo') || msg.includes('key')) {
+                return "🔑 **How to get API Key:**\n\n1️⃣ Register at https://zass.website/register\n2️⃣ Choose your plan (Free, Pro, Business, Enterprise)\n3️⃣ Complete payment (for paid plans)\n4️⃣ Your API key will appear in dashboard\n\n🎉 Free plan users get API key immediately!";
+            }
+            
+            // Help
+            if (msg.includes('help') || msg.includes('msaada') || msg.includes('saidia')) {
+                return "🤝 **I can help you with:**\n\n• Pricing plans (Free, Pro, Business, Enterprise)\n• Payment methods (NMB Bank Tanzania)\n• API keys and activation\n• Technical support\n• Account management\n\nWhat would you like to know?";
+            }
+            
+            // Features
+            if (msg.includes('feature') || msg.includes('kitu') || msg.includes('what can')) {
+                return "⚡ **ZASS Features:**\n\n• Browser isolation\n• Anti-fingerprinting protection\n• Screenshot API (PNG/PDF)\n• Batch processing (100 URLs)\n• AI-powered support\n• 24/7 availability\n\nAnything specific you'd like to know?";
+            }
+            
+            // Demo
+            if (msg.includes('demo') || msg.includes('jaribu') || msg.includes('try')) {
+                return "🎯 **Try Live Demo:**\n\nGo to https://zass.website and use the live demo section. Enter any URL and click 'Capture Now' - no registration required!";
+            }
+            
+            // Contact
+            if (msg.includes('contact') || msg.includes('wasiliana') || msg.includes('email') || msg.includes('phone')) {
+                return "📞 **Contact Information:**\n\n📧 Email: citytechuk@gmail.com\n📱 Phone: +255 763 233 48\n💬 WhatsApp: +25576323348\n💰 NMB Account: 5161480052318274\n\nWe respond within 24 hours!";
+            }
+            
+            // Company/About
+            if (msg.includes('company') || msg.includes('kampuni')) {
+                return "🏢 **ZASS Enterprise** is headquartered in Dar es Salaam, Tanzania. We provide enterprise-grade browser isolation and security solutions to clients worldwide.";
+            }
+            
+            // Time
+            if (msg.includes('time') || msg.includes('saa')) {
+                return `🕐 Current time is ${new Date().toLocaleTimeString()}`;
+            }
+            
+            // Date
+            if (msg.includes('date') || msg.includes('tarehe')) {
+                return `📅 Today is ${new Date().toDateString()}`;
+            }
+            
+            // Hello/Greeting
+            if (msg.includes('hello') || msg.includes('hi') || msg.includes('jambo') || msg.includes('habari')) {
+                return "Hello! 👋 Welcome to ZASS AI Assistant. How can I help you today? Ask me about pricing, payments, or API keys!";
+            }
+            
+            // Thank you
+            if (msg.includes('thank') || msg.includes('asante')) {
+                return "You're welcome! 😊 Is there anything else I can help you with?";
+            }
+            
+            // Default response
+            return "Thank you for your question. I'm ZASS AI Assistant. I can help with:\n\n• 💰 Pricing plans (Free, Pro, Business, Enterprise)\n• 💳 Payment methods (NMB Bank)\n• 🔑 API keys activation\n• 🛡️ Technical support\n\nWhat would you like to know specifically?";
         }
         
-        function removeRoutine(index) {
-            dailyRoutines.splice(index, 1);
-            localStorage.setItem('dailyRoutines', JSON.stringify(dailyRoutines));
-            displayRoutines();
+        // ==================== SEND MESSAGE ====================
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Show typing indicator
+            const typingDiv = showTyping();
+            
+            // Simulate AI thinking
+            setTimeout(() => {
+                typingDiv.remove();
+                const response = getSmartResponse(message);
+                addMessage(response, 'bot');
+            }, 500);
         }
         
+        // ==================== VOICE RECOGNITION ====================
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
@@ -204,20 +209,27 @@
             recognition.interimResults = false;
             recognition.lang = 'en-US';
             
-            recognition.onresult = async (event) => {
+            recognition.onresult = (event) => {
                 const text = event.results[0][0].transcript;
-                document.getElementById('voiceResult').innerHTML = `<strong>You said:</strong> "${text}"<br><div class="loader"></div> Processing...`;
-                document.getElementById('voiceStatus').innerHTML = '🎤 Processing...';
+                document.getElementById('voiceStatus').innerHTML = '🎤 You said: "' + text + '"';
                 
-                let response = getAIResponse(text);
+                // Add user message
+                addMessage(text, 'user');
                 
-                document.getElementById('voiceResult').innerHTML = `<strong>You said:</strong> "${text}"<br><strong>AI:</strong> ${response}`;
-                document.getElementById('voiceStatus').innerHTML = '🎤 Click microphone and speak...';
-                addMessage(response, 'bot');
-                
-                const utterance = new SpeechSynthesisUtterance(response);
-                utterance.lang = 'en-US';
-                window.speechSynthesis.speak(utterance);
+                // Show typing and respond
+                const typingDiv = showTyping();
+                setTimeout(() => {
+                    typingDiv.remove();
+                    const response = getSmartResponse(text);
+                    addMessage(response, 'bot');
+                    
+                    // Speak response
+                    const utterance = new SpeechSynthesisUtterance(response);
+                    utterance.lang = 'en-US';
+                    window.speechSynthesis.speak(utterance);
+                    
+                    document.getElementById('voiceStatus').innerHTML = '🎤 Click microphone and speak';
+                }, 500);
             };
             
             recognition.onerror = (event) => {
@@ -229,7 +241,7 @@
                 document.getElementById('micBtn').classList.remove('listening');
             };
         } else {
-            document.getElementById('voiceStatus').innerHTML = '⚠️ Speech recognition not supported';
+            document.getElementById('voiceStatus').innerHTML = '⚠️ Voice not supported in this browser';
         }
         
         function startVoiceRecognition() {
@@ -238,89 +250,25 @@
                 document.getElementById('micBtn').classList.add('listening');
                 document.getElementById('voiceStatus').innerHTML = '🎤 Listening... Speak now!';
             } else {
-                alert('Speech recognition not supported. Please use Chrome.');
+                alert('Voice recognition not supported. Please use Chrome browser.');
             }
         }
         
-        function getAIResponse(message) {
-            const msg = message.toLowerCase();
-            if (msg.includes('price') || msg.includes('bei')) return "💰 Pricing: Free $0/mo, Pro $49/mo, Business $99/mo, Enterprise $299/mo. Which plan?";
-            if (msg.includes('payment')) return "💳 NMB Bank: 5161480052318274, ZASS Enterprise Solutions. Email citytechuk@gmail.com after payment.";
-            if (msg.includes('api key')) return "🔑 Get API key at /register. Free plan users get key immediately.";
-            if (msg.includes('hello') || msg.includes('hi')) return "Hello! 👋 Welcome to ZASS AI Assistant!";
-            if (msg.includes('time')) return `🕐 ${new Date().toLocaleTimeString()}`;
-            if (msg.includes('help')) return "🤝 I can help with: Pricing, Payments, API keys, Support.";
-            return "I'm ZASS AI Assistant. Ask me about pricing, payments, or API keys!";
-        }
-        
-        async function startScreenShare() {
-            try {
-                mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-                const video = document.createElement('video');
-                video.srcObject = mediaStream;
-                video.autoplay = true;
-                document.getElementById('screenPreview').innerHTML = '';
-                document.getElementById('screenPreview').appendChild(video);
-                document.getElementById('screenAnalysis').innerHTML = '📸 Screen sharing active. Click "Capture & Analyze".';
-            } catch (err) {
-                alert('Error: ' + err.message);
-            }
-        }
-        
-        async function captureScreen() {
-            if (!mediaStream) { alert('Start screen share first'); return; }
-            const video = document.querySelector('#screenPreview video');
-            if (!video) return;
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth || 800;
-            canvas.height = video.videoHeight || 600;
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            document.getElementById('screenAnalysis').innerHTML = '<div class="loader"></div> Analyzing...';
-            setTimeout(() => {
-                document.getElementById('screenAnalysis').innerHTML = '<strong>📊 Analysis:</strong> Screen captured successfully. For detailed analysis, describe what you want me to look for.';
-                addMessage('Screen captured and analyzed.', 'bot');
-            }, 1000);
-        }
-        
-        function stopScreenShare() {
-            if (mediaStream) {
-                mediaStream.getTracks().forEach(track => track.stop());
-                mediaStream = null;
-                document.getElementById('screenPreview').innerHTML = '<p>No screen shared yet</p>';
-                document.getElementById('screenAnalysis').innerHTML = '';
-            }
-        }
-        
-        async function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            if (!message || isProcessing) return;
-            addMessage(message, 'user');
-            input.value = '';
-            isProcessing = true;
-            const loadingDiv = addLoadingIndicator();
-            setTimeout(() => {
-                const response = getAIResponse(message);
-                loadingDiv.remove();
-                addMessage(response, 'bot');
-                isProcessing = false;
-            }, 300);
-        }
-        
+        // ==================== UI FUNCTIONS ====================
         function addMessage(text, sender) {
             const container = document.getElementById('chatMessages');
             const div = document.createElement('div');
             div.className = `message ${sender}-message`;
-            div.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
+            div.innerHTML = `<div class="bubble">${escapeHtml(text).replace(/\n/g, '<br>')}</div>`;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
         
-        function addLoadingIndicator() {
+        function showTyping() {
             const container = document.getElementById('chatMessages');
             const div = document.createElement('div');
             div.className = 'message bot-message';
-            div.id = 'loadingIndicator';
+            div.id = 'typingIndicator';
             div.innerHTML = '<div class="bubble"><div class="loader"></div> Thinking...</div>';
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
@@ -333,7 +281,12 @@
             return div.innerHTML;
         }
         
-        displayRoutines();
+        // Enter key to send
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
     </script>
 </body>
 </html>
