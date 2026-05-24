@@ -1,25 +1,24 @@
 {
-  "name": "zass-ai-bot",
-  "version": "1.0.0",
-  "description": "ZASS Enterprise AI Bot - WhatsApp + WebSocket + Auto Payment",
-  "main": "bot.js",
+  "name": "zass-ai-agent",
+  "version": "2.0.0",
+  "description": "ZASS AI Agent - Your personal AI assistant that can do anything",
+  "main": "server.js",
   "scripts": {
-    "start": "node bot.js",
-    "dev": "nodemon bot.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "socket.io": "^4.6.1",
-    "whatsapp-web.js": "^1.23.0",
-    "qrcode-terminal": "^0.12.0",
-    "sqlite3": "^5.1.6",
-    "sqlite": "^5.1.1",
-    "bcryptjs": "^2.4.3",
-    "axios": "^1.6.2",
-    "dotenv": "^16.3.1",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4",
+    "express-rate-limit": "^7.1.5",
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
