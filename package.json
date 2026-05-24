@@ -1,14 +1,16 @@
 {
   "name": "zass-ai-agent",
-  "version": "2.0.0",
-  "description": "ZASS AI Agent - Your personal AI assistant",
+  "version": "3.0.0",
+  "description": "ZASS AI Agent with Voice, Screen Share, Daily Routine",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "multer": "^1.4.5-lts.1",
+    "node-schedule": "^2.1.1"
   },
   "engines": {
     "node": "18.x",
