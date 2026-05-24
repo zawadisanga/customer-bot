@@ -1,28 +1,15 @@
 // server.js - ZASS AI AGENT (Fixed for Heroku)
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
-const compression = require('compression');
-const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ==================== MIDDLEWARE ====================
-app.use(helmet({ contentSecurityPolicy: false }));
-app.use(compression());
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json());
 app.use(express.static('.'));
-
-// Rate limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: 'Too many requests, please try again later.'
-});
-app.use('/api/', limiter);
 
 // ==================== AI CONFIGURATION ====================
 const GEMINI_API_KEY = 'AIzaSyAgzX8szyUGq2TxCoUgAJx7U-z4FSgiLP8';
@@ -50,6 +37,7 @@ app.post('/api/chat', async (req, res) => {
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || getSmartReply(message);
         res.json({ success: true, response: reply });
     } catch (error) {
+        console.error('AI Error:', error);
         res.json({ success: true, response: getSmartReply(message) });
     }
 });
@@ -61,6 +49,9 @@ function getSmartReply(message) {
     }
     if (msg.includes('payment') || msg.includes('malipo')) {
         return `💳 *Payment Instructions:*\n\nBank: NMB Bank Tanzania\nAccount: 5161480052318274\nAccount Name: ZASS Enterprise Solutions\nSWIFT: NMBLTZTZ\n\nAfter payment, email ${CONTACT_EMAIL} with payment reference.`;
+    }
+    if (msg.includes('api key')) {
+        return "🔑 To get an API key:\n1. Register an account\n2. Complete payment (for paid plans)\n3. Your API key will appear in dashboard\n\nFree plan users get API key immediately!";
     }
     if (msg.includes('help')) {
         return "🤝 I can help you with:\n• Pricing plans\n• Payment methods\n• API keys\n• Technical support\n• Account management\n\nWhat do you need?";
@@ -75,165 +66,7 @@ app.get('/health', (req, res) => {
 
 // ==================== FRONTEND ====================
 app.get('/', (req, res) => {
-    res.send(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZASS AI Agent - Your Personal AI Assistant</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a, #0f0c29, #1a1a2e);
-            color: white;
-            min-height: 100vh;
-        }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; flex-wrap: wrap; gap: 20px; }
-        .logo { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #00ff00; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
-        .hero { text-align: center; padding: 60px 0; }
-        .hero h1 { font-size: 48px; margin-bottom: 20px; background: linear-gradient(135deg, #fff, #667eea); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .hero p { font-size: 18px; color: #aaa; max-width: 600px; margin: 0 auto; }
-        
-        .chat-section {
-            background: rgba(255,255,255,0.05);
-            border-radius: 24px;
-            padding: 30px;
-            margin: 40px 0;
-        }
-        .chat-messages {
-            height: 400px;
-            overflow-y: auto;
-            padding: 20px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 16px;
-            margin-bottom: 20px;
-        }
-        .message { margin-bottom: 15px; display: flex; }
-        .user-message { justify-content: flex-end; }
-        .user-message .bubble { background: linear-gradient(135deg, #667eea, #764ba2); }
-        .bot-message .bubble { background: rgba(255,255,255,0.1); }
-        .bubble { padding: 12px 18px; border-radius: 20px; max-width: 80%; word-wrap: break-word; }
-        .chat-input { display: flex; gap: 10px; }
-        .chat-input input { flex: 1; padding: 15px; border-radius: 50px; border: none; background: rgba(255,255,255,0.1); color: white; font-size: 16px; }
-        .chat-input button { padding: 15px 30px; border-radius: 50px; border: none; background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-weight: bold; cursor: pointer; }
-        
-        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin: 60px 0; }
-        .feature { background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; text-align: center; }
-        .feature-icon { font-size: 48px; margin-bottom: 20px; }
-        
-        footer { text-align: center; padding: 40px 0; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 60px; }
-        .loader { width: 20px; height: 20px; border: 2px solid white; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 768px) { .hero h1 { font-size: 32px; } .bubble { max-width: 95%; } }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <nav>
-            <div class="logo">🤖 ZASS AI Agent</div>
-            <div><span class="status"></span> Online | <span id="time"></span></div>
-        </nav>
-        
-        <div class="hero">
-            <h1>Your Personal AI Assistant</h1>
-            <p>I can help you with pricing, payments, API keys, technical support, and more! Available 24/7.</p>
-        </div>
-        
-        <div class="chat-section">
-            <h3>💬 Chat with AI Agent</h3>
-            <div class="chat-messages" id="chatMessages">
-                <div class="message bot-message"><div class="bubble">👋 Hello! I'm ZASS AI Assistant. I can help you with pricing, payments, API keys, and technical support. What would you like to know?</div></div>
-            </div>
-            <div class="chat-input">
-                <input type="text" id="chatInput" placeholder="Type your question..." onkeypress="if(event.key==='Enter') sendMessage()">
-                <button onclick="sendMessage()">Send</button>
-            </div>
-        </div>
-        
-        <div class="features">
-            <div class="feature"><div class="feature-icon">💰</div><h3>Pricing & Plans</h3><p>Get information about our pricing plans</p></div>
-            <div class="feature"><div class="feature-icon">💳</div><h3>Payment Support</h3><p>Payment instructions and verification</p></div>
-            <div class="feature"><div class="feature-icon">🔑</div><h3>API Keys</h3><p>Get and manage your API keys</p></div>
-            <div class="feature"><div class="feature-icon">💬</div><h3>24/7 Support</h3><p>Always available to help you</p></div>
-        </div>
-        
-        <footer>
-            <p>🤖 ZASS AI Agent | Powered by Google Gemini AI | 24/7 Online</p>
-            <p>📧 ${CONTACT_EMAIL} | 📞 ${CONTACT_PHONE}</p>
-            <p>💰 NMB Account: 5161480052318274</p>
-        </footer>
-    </div>
-
-    <script>
-        let isProcessing = false;
-        
-        async function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            if (!message || isProcessing) return;
-            
-            addMessage(message, 'user');
-            input.value = '';
-            isProcessing = true;
-            
-            const loadingDiv = addLoadingIndicator();
-            
-            try {
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message })
-                });
-                const data = await response.json();
-                loadingDiv.remove();
-                addMessage(data.response, 'bot');
-            } catch (error) {
-                loadingDiv.remove();
-                addMessage('Sorry, I had an error. Please try again.', 'bot');
-            }
-            isProcessing = false;
-        }
-        
-        function addMessage(text, sender) {
-            const container = document.getElementById('chatMessages');
-            const div = document.createElement('div');
-            div.className = `message ${sender}-message`;
-            div.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-        }
-        
-        function addLoadingIndicator() {
-            const container = document.getElementById('chatMessages');
-            const div = document.createElement('div');
-            div.className = 'message bot-message';
-            div.id = 'loadingIndicator';
-            div.innerHTML = '<div class="bubble"><div class="loader"></div> Thinking...</div>';
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-            return div;
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        document.getElementById('time').innerText = new Date().toLocaleTimeString();
-        setInterval(() => {
-            document.getElementById('time').innerText = new Date().toLocaleTimeString();
-        }, 1000);
-    </script>
-</body>
-</html>
-    `);
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // ==================== START SERVER ====================
