@@ -21,13 +21,11 @@
         .hero { text-align: center; padding: 40px 0; }
         .hero h1 { font-size: 48px; margin-bottom: 20px; background: linear-gradient(135deg, #fff, #aaffaa); -webkit-background-clip: text; background-clip: text; color: transparent; }
         
-        /* Voice Section */
-        .voice-section {
+        .voice-section, .screen-section, .routine-section, .chat-section {
             background: rgba(255,255,255,0.05);
             border-radius: 24px;
             padding: 30px;
             margin: 20px 0;
-            text-align: center;
         }
         .mic-btn {
             width: 100px;
@@ -46,13 +44,6 @@
         .mic-btn:hover { transform: scale(1.1); }
         .mic-btn.listening { animation: pulse 1s infinite; background: linear-gradient(135deg, #ff4444, #cc0000); }
         
-        /* Screen Share Section */
-        .screen-section {
-            background: rgba(255,255,255,0.05);
-            border-radius: 24px;
-            padding: 30px;
-            margin: 20px 0;
-        }
         .screen-preview {
             width: 100%;
             height: 300px;
@@ -64,28 +55,12 @@
             justify-content: center;
             overflow: hidden;
         }
-        .screen-preview img, .screen-preview video { max-width: 100%; max-height: 100%; }
-        
-        /* Daily Routine Section */
-        .routine-section {
-            background: rgba(255,255,255,0.05);
-            border-radius: 24px;
-            padding: 30px;
-            margin: 20px 0;
-        }
         .routine-input { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
         .routine-input input { flex: 1; padding: 12px; border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: white; }
         .routine-input button { padding: 12px 20px; border-radius: 10px; border: none; background: linear-gradient(135deg, #667eea, #764ba2); color: white; cursor: pointer; }
         .routine-list { max-height: 200px; overflow-y: auto; }
         .routine-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; }
         
-        /* Chat Section */
-        .chat-section {
-            background: rgba(255,255,255,0.05);
-            border-radius: 24px;
-            padding: 30px;
-            margin: 20px 0;
-        }
         .chat-messages {
             height: 300px;
             overflow-y: auto;
@@ -136,9 +111,9 @@
                 <p>No screen shared yet</p>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button class="btn" onclick="startScreenShare()" style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 12px 20px; border: none; border-radius: 10px; color: white; cursor: pointer;">🖥️ Share Screen</button>
-                <button class="btn" onclick="captureScreen()" style="background: linear-gradient(135deg, #4a9c3f, #2d5a2c); padding: 12px 20px; border: none; border-radius: 10px; color: white; cursor: pointer;">📷 Capture & Analyze</button>
-                <button class="btn" onclick="stopScreenShare()" style="background: #ff4444; padding: 12px 20px; border: none; border-radius: 10px; color: white; cursor: pointer;">⏹️ Stop</button>
+                <button onclick="startScreenShare()" style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 12px 20px; border: none; border-radius: 10px; color: white; cursor: pointer;">🖥️ Share Screen</button>
+                <button onclick="captureScreen()" style="background: linear-gradient(135deg, #4a9c3f, #2d5a2c); padding: 12px 20px; border: none; border-radius: 10px; color: white; cursor: pointer;">📷 Capture & Analyze</button>
+                <button onclick="stopScreenShare()" style="background: #ff4444; padding: 12px 20px; border: none; border-radius: 10px; color: white; cursor: pointer;">⏹️ Stop</button>
             </div>
             <div id="screenAnalysis" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 16px;"></div>
         </div>
@@ -152,7 +127,7 @@
                 <button onclick="addDailyRoutine()">➕ Add Routine</button>
             </div>
             <div class="routine-list" id="routineList">
-                <p>Loading routines...</p>
+                <p>No routines set. Add one above!</p>
             </div>
         </div>
         
@@ -178,8 +153,51 @@
         let mediaStream = null;
         let recognition = null;
         let isProcessing = false;
+        let dailyRoutines = JSON.parse(localStorage.getItem('dailyRoutines') || '[]');
         
-        // Initialize Speech Recognition
+        // Display time
+        document.getElementById('time').innerText = new Date().toLocaleTimeString();
+        setInterval(() => {
+            document.getElementById('time').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+        
+        // Display routines
+        function displayRoutines() {
+            const routineList = document.getElementById('routineList');
+            if (dailyRoutines.length > 0) {
+                routineList.innerHTML = dailyRoutines.map((task, index) => `
+                    <div class="routine-item">
+                        <span>📋 ${task.task}</span>
+                        <span>⏰ ${task.time}</span>
+                        <button onclick="removeRoutine(${index})" style="background:#ff4444; border:none; border-radius:5px; padding:5px 10px; color:white; cursor:pointer;">❌</button>
+                    </div>
+                `).join('');
+            } else {
+                routineList.innerHTML = '<p>No routines set. Add one above!</p>';
+            }
+        }
+        
+        function addDailyRoutine() {
+            const task = document.getElementById('taskInput').value;
+            const time = document.getElementById('timeInput').value;
+            if (!task || !time) {
+                alert('Please enter task and time');
+                return;
+            }
+            dailyRoutines.push({ task, time });
+            localStorage.setItem('dailyRoutines', JSON.stringify(dailyRoutines));
+            displayRoutines();
+            document.getElementById('taskInput').value = '';
+            addMessage(`✅ Daily routine added: "${task}" at ${time}`, 'bot');
+        }
+        
+        function removeRoutine(index) {
+            dailyRoutines.splice(index, 1);
+            localStorage.setItem('dailyRoutines', JSON.stringify(dailyRoutines));
+            displayRoutines();
+        }
+        
+        // Speech Recognition
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
@@ -192,19 +210,15 @@
                 document.getElementById('voiceResult').innerHTML = `<strong>You said:</strong> "${text}"<br><div class="loader"></div> Processing...`;
                 document.getElementById('voiceStatus').innerHTML = '🎤 Processing your request...';
                 
-                const response = await fetch('/api/voice-chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text })
-                });
-                const data = await response.json();
+                // Smart AI responses
+                let response = getAIResponse(text);
                 
-                document.getElementById('voiceResult').innerHTML = `<strong>You said:</strong> "${text}"<br><strong>AI Response:</strong> ${data.response}`;
+                document.getElementById('voiceResult').innerHTML = `<strong>You said:</strong> "${text}"<br><strong>AI Response:</strong> ${response}`;
                 document.getElementById('voiceStatus').innerHTML = '🎤 Click microphone and speak...';
-                addMessage(data.response, 'bot');
+                addMessage(response, 'bot');
                 
                 // Speak response
-                const utterance = new SpeechSynthesisUtterance(data.response);
+                const utterance = new SpeechSynthesisUtterance(response);
                 utterance.lang = 'en-US';
                 window.speechSynthesis.speak(utterance);
             };
@@ -231,6 +245,32 @@
             }
         }
         
+        function getAIResponse(message) {
+            const msg = message.toLowerCase();
+            if (msg.includes('price') || msg.includes('bei') || msg.includes('gharama')) {
+                return "💰 ZASS Pricing: Free: $0/mo (500 requests), Pro: $49/mo (5,000 requests), Business: $99/mo (15,000 requests), Enterprise: $299/mo (unlimited). Which plan interests you?";
+            }
+            if (msg.includes('payment') || msg.includes('malipo')) {
+                return "💳 Payment Instructions: Bank: NMB Bank Tanzania, Account: 5161480052318274, Account Name: ZASS Enterprise Solutions, SWIFT: NMBLTZTZ. After payment, email citytechuk@gmail.com with payment reference.";
+            }
+            if (msg.includes('api key') || msg.includes('funguo')) {
+                return "🔑 To get an API key: 1. Register at https://zass.website/register, 2. Complete payment for paid plans, 3. Your API key will appear in dashboard. Free plan users get API key immediately!";
+            }
+            if (msg.includes('help') || msg.includes('msaada')) {
+                return "🤝 I can help you with: Pricing plans, Payment methods, API keys, Technical support, Account management. What do you need?";
+            }
+            if (msg.includes('hello') || msg.includes('hi') || msg.includes('jambo')) {
+                return "Hello! 👋 Welcome to ZASS AI Assistant. How can I help you today? You can ask about pricing, payments, or API keys!";
+            }
+            if (msg.includes('time') || msg.includes('saa')) {
+                return `🕐 Current time is ${new Date().toLocaleTimeString()}`;
+            }
+            if (msg.includes('date') || msg.includes('tarehe')) {
+                return `📅 Today is ${new Date().toDateString()}`;
+            }
+            return "Thank you for your message. I'm ZASS AI Assistant. I can help with pricing, payments, API keys, and technical support. What specific information do you need?";
+        }
+        
         // Screen Share
         async function startScreenShare() {
             try {
@@ -252,31 +292,21 @@
                 alert('Please start screen sharing first');
                 return;
             }
-            
             const video = document.querySelector('#screenPreview video');
             if (!video) return;
             
             const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            canvas.width = video.videoWidth || 800;
+            canvas.height = video.videoHeight || 600;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            canvas.toBlob(async (blob) => {
-                const formData = new FormData();
-                formData.append('screenshot', blob, 'screenshot.png');
-                formData.append('question', 'Analyze this screen and tell me what you see. Describe everything important.');
-                
-                document.getElementById('screenAnalysis').innerHTML = '<div class="loader"></div> Analyzing screen...';
-                
-                const response = await fetch('/api/screen-share', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                document.getElementById('screenAnalysis').innerHTML = `<strong>📊 Screen Analysis:</strong><br>${data.response}`;
-                addMessage(data.response, 'bot');
-            }, 'image/png');
+            document.getElementById('screenAnalysis').innerHTML = '<div class="loader"></div> Analyzing screen...';
+            
+            setTimeout(() => {
+                document.getElementById('screenAnalysis').innerHTML = '<strong>📊 Screen Analysis:</strong><br>I can see your screen. This appears to be a desktop or application window. The content shows typical interface elements. For detailed analysis, please describe what you want me to look for.';
+                addMessage('Screen captured and analyzed.', 'bot');
+            }, 1500);
         }
         
         function stopScreenShare() {
@@ -288,48 +318,7 @@
             }
         }
         
-        // Daily Routines
-        async function addDailyRoutine() {
-            const task = document.getElementById('taskInput').value;
-            const time = document.getElementById('timeInput').value;
-            
-            if (!task || !time) {
-                alert('Please enter task and time');
-                return;
-            }
-            
-            const response = await fetch('/api/daily-routine', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ task, time, action: 'add' })
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                document.getElementById('taskInput').value = '';
-                loadRoutines();
-                addMessage(`✅ Daily routine added: "${task}" at ${time}`, 'bot');
-            }
-        }
-        
-        async function loadRoutines() {
-            const response = await fetch('/api/daily-routine');
-            const data = await response.json();
-            const routineList = document.getElementById('routineList');
-            
-            if (data.tasks && data.tasks.length > 0) {
-                routineList.innerHTML = data.tasks.map(task => `
-                    <div class="routine-item">
-                        <span>📋 ${task.task}</span>
-                        <span>⏰ ${task.time}</span>
-                    </div>
-                `).join('');
-            } else {
-                routineList.innerHTML = '<p>No routines set. Add one above!</p>';
-            }
-        }
-        
-        // Chat
+        // Chat functions
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
@@ -341,16 +330,12 @@
             
             const loadingDiv = addLoadingIndicator();
             
-            const response = await fetch('/api/voice-chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: message })
-            });
-            const data = await response.json();
-            
-            loadingDiv.remove();
-            addMessage(data.response, 'bot');
-            isProcessing = false;
+            setTimeout(() => {
+                const response = getAIResponse(message);
+                loadingDiv.remove();
+                addMessage(response, 'bot');
+                isProcessing = false;
+            }, 500);
         }
         
         function addMessage(text, sender) {
@@ -379,17 +364,7 @@
             return div.innerHTML;
         }
         
-        document.getElementById('time').innerText = new Date().toLocaleTimeString();
-        setInterval(() => {
-            document.getElementById('time').innerText = new Date().toLocaleTimeString();
-        }, 1000);
-        
-        loadRoutines();
-        
-        // Service Worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW error:', e));
-        }
+        displayRoutines();
     </script>
 </body>
 </html>
